@@ -7,5 +7,13 @@
 </head>
 <body>
     <h1>Test</h1>
+    <form action="{% url 'handle_form' %}" method="get">
+        <label for="domain-search">Domain Search: </label>
+        <input id="domain-search" name="domain-search" type="text"><br><br>
+
+        <label for="keyword-search">Keyword Search: </label>
+        <input id="keyword-search" name="keyword-search" type="text"><br>
+        <button type="submit">Search</button>
+    </form>
 </body>
 </html>
