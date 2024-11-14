@@ -4,16 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'seotool/style.css' %}">
 </head>
 <body>
-    <h1>Test</h1>
-    <form action="{% url 'handle_form' %}" method="get">
-        <label for="domain-search">Domain Search: </label>
-        <input id="domain-search" name="domain-search" type="text"><br><br>
+    <div class="container">
+        <h1>Test</h1>
+        <form action="{% url 'handle_form' %}" method="get">
+            <label for="domain-search">Domain Search:</label>
+            <input id="domain-search" name="domain-search" type="text"><br><br>
 
-        <label for="keyword-search">Keyword Search: </label>
-        <input id="keyword-search" name="keyword-search" type="text"><br>
-        <button type="submit">Search</button>
-    </form>
+            <label for="keyword-search">Keyword Search:</label>
+            <input id="keyword-search" name="keyword-search" type="text"><br>
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+    {% if query_count is not None %}
+    <div style="margin-top: 20px;">
+        <h2>Results for "{{ query }}" in "{{ domain }}"</h2>
+        <p><strong>Keyword Count:</strong> {{ query_count }}</p>
+        <p><strong>Total Words on Page:</strong> {{ total_words }}</p>
+        <p><strong>Keyword Density:</strong> {{ keyword_density }}%</p>
+        <p><strong>Check Description:</strong> {{ description }}</p>
+        <p><strong>Check Image:</strong> {{ img_alt }}</p>
+        <p><strong>Check Title:</strong> {{ title }}</p>
+    </div>
+    {% endif %}
+
+
 </body>
+
 </html>
