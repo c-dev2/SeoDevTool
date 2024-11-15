@@ -1,13 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
-</head>
-<body>
-    <div class="container">
-        <h1>Test</h1>
+<div class="main-header">
+    <h1>SEO Dev Tool</h1>
+</div>
+<div class="main-container">
+    <!-- Search Box Section -->
+    <div class="search-box">
         <form action="{% url 'handle_form' %}" method="get">
             <label for="domain-search">Domain Search:</label>
             <input id="domain-search" name="domain-search" type="text"><br><br>
@@ -18,22 +14,61 @@
         </form>
     </div>
 
+    <!-- Metrics Display Section -->
     {% if query_count is not None %}
-    <div style="margin-top: 20px;">
+    <div class="metrics-display">
         <h2>Results for "{{ query }}" in "{{ domain }}"</h2>
-        <p><strong>Keyword Count:</strong> {{ query_count }}</p>
-        <p><strong>Total Words on Page:</strong> {{ total_words }}</p>
-        <p><strong>Keyword Density:</strong> {{ keyword_density }}%</p>
-        <p><strong>Check Description:</strong> {{ description }}</p>
-        <p><strong>Check Image:</strong> {{ img_alt }}</p>
-        <p><strong>Check Title:</strong> {{ title }}</p>
-        <p><strong>Read Score:</strong> {{ read_score }}</p>
-        <p><strong>Page Load Speed:</strong> {{ load_speed }}</p>
+        <div class="metrics-grid">
+            <!-- Keyword Count -->
+            <div class="metric-container">
+                <h2 class="metric-val">{{ query_count }}</h2>
+                <h3 class="metric-name">Keyword Count</h3>
+            </div>
+            <!-- Total Words -->
+            <div class="metric-container">
+                <h2 class="metric-val">{{ total_words }}</h2>
+                <h3 class="metric-name">Total Words</h3>
+            </div>
+            <!-- Keyword Density -->
+            <div class="metric-container {% if keyword_density > 1 %}good{% elif keyword_density > 0.5 %}medium{% else %}bad{% endif %}">
+                <h2 class="metric-val">{{ keyword_density }}%</h2>
+                <h3 class="metric-name">Keyword Density</h3>
+            </div>
+            <!-- Page Load Speed -->
+            <div class="metric-container {% if load_speed < 1 %}good{% elif load_speed < 1 %}medium{% else %}bad{% endif %}">
+                <h2 class="metric-val">{{ load_speed }}s</h2>
+                <h3 class="metric-name">Page Load Speed</h3>
+            </div>
+            <!-- Content Readability -->
+            <div class="metric-container {% if read_score > 80 %}good{% elif read_score > 30 %}medium{% else %}bad{% endif %}">
+                <h2 class="metric-val">{{ read_score }}</h2>
+                <h3 class="metric-name">Content Readability</h3>
+            </div>
+            <!-- Check Image -->
+            <div class="metric-container {% if img_alt == 'Filled' %}good{% else %}bad{% endif %}">
+                <h2 class="metric-val">{{ img_alt }}</h2>
+                <h3 class="metric-name">Check Image Alt</h3>
+            </div>
+            <!-- Check Description -->
+            <div class="metric-container {% if description == 'Filled' %}good{% else %}bad{% endif %}">
+                <h2 class="metric-val">{{ description }}</h2>
+                <h3 class="metric-name">Check Description</h3>
+            </div>
+            <!-- Check Title -->
+            <div class="metric-container {% if title == 'Filled' %}good{% else %}bad{% endif %}">
+                <h2 class="metric-val">{{ title }}</h2>
+                <h3 class="metric-name">Check Title</h3>
+            </div>
+        </div>
     </div>
     {% endif %}
+</div>
+<div class="footer">
+    <p>&copy; 2024 SEO Dev Tool. All Rights Reserved.</p>
+</div>
 
-    <style>
-        /* style.css */
+<style>
+/* General Styles */
 * {
     margin: 0;
     padding: 0;
@@ -41,35 +76,68 @@
     font-family: Arial, sans-serif;
 }
 
+/* Body */
 body {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #f4f4f9;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #121212;
+    color: #e0e0e0;
+    margin: 0;
 }
 
-.container {
-    background-color: #ffffff;
-    padding: 20px 30px;
-    width: 100%;
-    max-width: 400px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
-}
-
-h1 {
-    margin-bottom: 20px;
-    color: #333;
+/* Header */
+.main-header {
+    margin-top: 20px;
     font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    padding: 10px 0;
+    color: #ffffff;
 }
 
+/* Main Container */
+.main-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+    width: 90%;
+    max-width: 800px;
+    margin: 50px auto;
+}
+
+/* Search Box */
+.search-box {
+    background-color: #1e1e1e;
+    padding: 20px 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.7);
+}
+
+/* Results Section */
+.metrics-display {
+    background-color: #1e1e1e;
+    padding: 20px 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.7);
+    margin-top: 50px;
+}
+
+/* Center the results header and add spacing */
+.metrics-display h2 {
+    text-align: center;
+    margin-bottom: 20px; /* Space below the header */
+    font-size: 20px;
+    color: #e0e0e0;
+}
+
+/* Labels and Inputs */
 label {
     display: block;
     font-weight: bold;
     margin-top: 15px;
-    color: #555;
+    color: #e0e0e0;
 }
 
 input[type="text"] {
@@ -77,8 +145,10 @@ input[type="text"] {
     padding: 10px;
     margin-top: 5px;
     margin-bottom: 15px;
-    border: 1px solid #ddd;
+    border: 1px solid #333;
     border-radius: 4px;
+    background-color: #2a2a2a;
+    color: #e0e0e0;
 }
 
 button[type="submit"] {
@@ -97,8 +167,63 @@ button[type="submit"]:hover {
     background-color: #0056b3;
 }
 
-    </style>
+/* Metrics Grid */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
 
+/* Metric Container */
+.metric-container {
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    color: #fff;
+    background-color: darkgray;
+    font-weight: bold;
+}
+
+.metric-container.good {
+    background-color: #28a745;
+}
+
+.metric-container.medium {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.metric-container.bad {
+    background-color: #dc3545;
+}
+
+/* Metric Values */
+.metric-val {
+    font-size: 28px; /* Larger font size */
+    font-weight: bold; /* Bold text */
+    color: #ffffff; /* Bright white to stand out */
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5); /* Subtle shadow for more emphasis */
+}
+
+/* Metric Names */
+.metric-name {
+    font-size: 16px;
+    color: #e0e0e0; /* Softer gray to contrast with value */
+    margin-top: 5px; /* Add space between the value and the name */
+}
+
+/* Footer */
+.footer {
+    background-color: #1e1e1e;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 14px;
+    color: #e0e0e0;
+    width: 100%;
+    margin-top: auto;
+}
+
+</style>
+    
 </body>
-
 </html>

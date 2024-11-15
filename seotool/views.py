@@ -27,9 +27,9 @@ def handle_form(request):
             readability_score = calculate_readability_score(page_text)
             load_speed = measure_load_speed(url)
 
-            description = check_description(soup)
-            img_alt = check_img_tag(soup)
-            title = check_title(soup)
+            description = check_description(soup).title()
+            img_alt = check_img_tag(soup).title()
+            title = check_title(soup).title()
 
             # Print results
             if keyword_count > 0:
@@ -79,7 +79,7 @@ def calculate_keyword_density(page_text, keyword):
     else:
         keyword_density = 0
     
-    return keyword_density, keyword_count, total_words
+    return round(keyword_density, 2), keyword_count, total_words
 
 def check_title(soup):
     title_tag = soup.title
@@ -91,7 +91,7 @@ def check_description(soup):
     meta_description_tag = soup.find('meta', {'name': 'description'})
     meta_description = meta_description_tag['content'] if meta_description_tag else None
     meta_description_check = "filled" if meta_description else "missing"
-    return meta_description
+    return meta_description_check
 
 def check_img_tag(soup):
     img_tags = soup.find_all('img')
@@ -116,8 +116,13 @@ def calculate_readability_score(page_text):
         readability_score = 206.835 - (1.015 * (total_words / total_sentences)) - (84.6 * (total_syllables / total_words))
     else:
         readability_score = 0
+        
+    if readability_score >= 100:
+        readability_score = 100
+    elif readability_score < 0:
+        readability_score = 0
 
-    return readability_score
+    return round(readability_score, 2)
 
 def count_syllables(word):
     word = word.lower()
@@ -148,7 +153,7 @@ def measure_load_speed(url):
         response.raise_for_status()  # Check for errors
         end_time = time.time()
         load_time = end_time - start_time  # Calculate load time in seconds
-        return load_time
+        return round(load_time, 2)
     except requests.exceptions.RequestException as e:
         print(f"Error loading page for speed check: {e}")
         return None  # Return None if there's an error
