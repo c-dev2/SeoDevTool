@@ -3,6 +3,26 @@ from django.http import HttpResponse
 import requests
 from bs4 import BeautifulSoup
 import time
+import re
+import os
+import nltk
+from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.corpus import cmudict
+
+# Set a custom directory for NLTK data in project folder
+nltk_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'nltk_data')
+if not os.path.exists(nltk_data_dir):
+    os.makedirs(nltk_data_dir)
+
+# Set the NLTK data path
+nltk.data.path.append(nltk_data_dir)
+
+# Now download the necessary resources into this folder
+nltk.download('punkt', download_dir=nltk_data_dir)
+nltk.download('cmudict', download_dir=nltk_data_dir)
+nltk.download('punkt_tab', download_dir=nltk_data_dir)
+
+d = cmudict.dict()
 
 def home(request):
     return render(request, "home.html")
@@ -16,7 +36,7 @@ def handle_form(request):
 
         try:
             # Fetch the website content
-            url = f'http://{domain}/'
+            url = f'http://{domain}'
             response = requests.get(url)
             response.raise_for_status()  # Check for errors
 
@@ -102,30 +122,53 @@ def check_img_tag(soup):
 
 # Readability formula based on Flesch-Kincaid Score: https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests
 def calculate_readability_score(page_text):
-    # Tokenize text into sentences and words
-    sentences = page_text.split('.')
-    words = page_text.split()
+    # Clean the text
+    page_text = clean_text(page_text)
+    if not page_text.strip():
+        print("Text is empty after cleaning.")
+        return 0  # Handle empty text gracefully
+
+    # Debug cleaned text
+    print(f"Cleaned Text: {page_text[:500]}...")  # Print the first 500 characters
+
+    try:
+        sentences = sent_tokenize(page_text)
+        print(f"Tokenized {len(sentences)} sentences.")
+    except Exception as e:
+        print(f"Error in sentence tokenization: {e}")
+        return 0
+
+    try:
+        words = word_tokenize(page_text)
+        print(f"Tokenized {len(words)} words.")
+    except Exception as e:
+        print(f"Error in word tokenization: {e}")
+        return 0
+
+    # Calculate total syllables
+    total_syllables = sum(count_syllables(word) for word in words)
+
+    # Calculate readability score
     total_sentences = len(sentences)
     total_words = len(words)
 
-    # Count total syllables (basic implementation)
-    total_syllables = sum(count_syllables(word) for word in words)
-
-    # Calculate readability score using the formula
     if total_sentences > 0 and total_words > 0:
         readability_score = 206.835 - (1.015 * (total_words / total_sentences)) - (84.6 * (total_syllables / total_words))
     else:
         readability_score = 0
-        
-    if readability_score >= 100:
-        readability_score = 100
-    elif readability_score < 0:
-        readability_score = 0
 
-    return round(readability_score, 2)
+    return max(0, min(round(readability_score, 2), 100))  # Keep score within 0-100
 
+# Improved syllable counting using CMU Dictionary
 def count_syllables(word):
     word = word.lower()
+    # If the word is in the CMU dictionary, count syllables based on its pronunciation
+    if word in d:
+        return max([len(list(y for y in x if y[-1].isdigit())) for x in d[word]])  # Return the syllable count
+    else:
+        return basic_syllable_count(word)  # Use the basic syllable counting method as a fallback
+
+def basic_syllable_count(word):
     vowels = "aeiouy"
     count = 0
     prev_char_was_vowel = False
@@ -157,3 +200,10 @@ def measure_load_speed(url):
     except requests.exceptions.RequestException as e:
         print(f"Error loading page for speed check: {e}")
         return None  # Return None if there's an error
+    
+    
+def clean_text(text):
+    # Remove unwanted whitespace or newline characters
+    cleaned_text = re.sub(r'\s+', ' ', text)  # Replace multiple spaces or newlines with a single space
+    cleaned_text = cleaned_text.strip()  # Strip leading/trailing whitespace
+    return cleaned_text
