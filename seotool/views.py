@@ -36,7 +36,11 @@ def handle_form(request):
 
         try:
             # Fetch the website content
-            url = f'http://{domain}'
+            if re.search("http[s]*://", domain) is not None:
+                url = domain
+            else:
+                url = f'http://{domain}'
+            
             response = requests.get(url)
             response.raise_for_status()  # Check for errors
 
@@ -44,7 +48,7 @@ def handle_form(request):
             page_text = soup.get_text()
 
             keyword_density, keyword_count, total_words = calculate_keyword_density(page_text, query)
-            readability_score = calculate_readability_score(page_text)
+            readability_score = calculate_readability_score_from_p_tags(soup)
             load_speed = measure_load_speed(url)
 
             description = check_description(soup).title()
@@ -121,16 +125,56 @@ def check_img_tag(soup):
     return img_alt_check
 
 # Readability formula based on Flesch-Kincaid Score: https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests
-def calculate_readability_score(page_text):
-    # Clean the text
-    page_text = clean_text(page_text)
+# def calculate_readability_score(page_text):
+#     # Clean the text
+#     page_text = clean_text(page_text)
+#     if not page_text.strip():
+#         print("Text is empty after cleaning.")
+#         return 0  # Handle empty text gracefully
+
+#     # Debug cleaned text
+#     print(f"Cleaned Text: {page_text[:500]}...")  # Print the first 500 characters
+
+#     try:
+#         sentences = sent_tokenize(page_text)
+#         print(f"Tokenized {len(sentences)} sentences.")
+#     except Exception as e:
+#         print(f"Error in sentence tokenization: {e}")
+#         return 0
+
+#     try:
+#         words = word_tokenize(page_text)
+#         print(f"Tokenized {len(words)} words.")
+#     except Exception as e:
+#         print(f"Error in word tokenization: {e}")
+#         return 0
+
+#     # Calculate total syllables
+#     total_syllables = sum(count_syllables(word) for word in words)
+
+#     # Calculate readability score
+#     total_sentences = len(sentences)
+#     total_words = len(words)
+
+#     if total_sentences > 0 and total_words > 0:
+#         readability_score = 206.835 - (1.015 * (total_words / total_sentences)) - (84.6 * (total_syllables / total_words))
+#     else:
+#         readability_score = 0
+
+#     return max(0, min(round(readability_score, 2), 100))  # Keep score within 0-100
+
+def calculate_readability_score_from_p_tags(soup):
+    """
+    Calculates the readability score using only the text within <p> tags.
+    """
+    # Extract text from <p> tags
+    page_text = clean_text_from_p_tags(soup)
+
     if not page_text.strip():
-        print("Text is empty after cleaning.")
+        print("No meaningful content found in <p> tags.")
         return 0  # Handle empty text gracefully
 
-    # Debug cleaned text
-    print(f"Cleaned Text: {page_text[:500]}...")  # Print the first 500 characters
-
+    # Tokenize sentences and words
     try:
         sentences = sent_tokenize(page_text)
         print(f"Tokenized {len(sentences)} sentences.")
@@ -157,7 +201,7 @@ def calculate_readability_score(page_text):
     else:
         readability_score = 0
 
-    return max(0, min(round(readability_score, 2), 100))  # Keep score within 0-100
+    return max(0, min(round(readability_score, 2), 100))  # Clamp to 0-100
 
 # Improved syllable counting using CMU Dictionary
 def count_syllables(word):
@@ -202,8 +246,16 @@ def measure_load_speed(url):
         return None  # Return None if there's an error
     
     
-def clean_text(text):
-    # Remove unwanted whitespace or newline characters
-    cleaned_text = re.sub(r'\s+', ' ', text)  # Replace multiple spaces or newlines with a single space
-    cleaned_text = cleaned_text.strip()  # Strip leading/trailing whitespace
+def clean_text_from_p_tags(soup):
+
+    # Extracts and cleans text from all <p> tags in the HTML content.
+    
+    # Get all <p> tags
+    paragraphs = soup.find_all('p')
+
+# Extract text from each <p> tag and join them into one string
+    text = ' '.join(p.get_text() for p in paragraphs if p.get_text())
+
+# Clean the extracted text
+    cleaned_text = re.sub(r'\s+', ' ', text).strip()  # Remove extra whitespace or newlines
     return cleaned_text
