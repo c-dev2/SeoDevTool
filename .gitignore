@@ -1,3 +1,6 @@
+# Add nltk_data directory so that is not constantly pushed up
+seotool/nltk_data/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
